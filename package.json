@@ -1,0 +1,13 @@
+{
+  "name": "strenv",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "npx tsc",
+    "run":  "yarn build && node ./out/index.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
