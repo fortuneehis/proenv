@@ -45,11 +45,13 @@ export default class Parser {
             this.expect(TokenTypes.ASSIGN)
             const value = this.getValue()
             this.expect(TokenTypes.NEWLINE)
-            this.lineNumber++
-            
-            result = {
+        this.lineNumber++
+        
+        result = {
                 ...result,
-               ...this.addToMap(key.value, value && value.value ? value.value : value )
+               ...(!key.value.startsWith(">") ? (
+                        this.addToMap(key.value, value && value.value ? value.value : value ) 
+                    ) : null)
             }
 
         }
@@ -103,6 +105,7 @@ export default class Parser {
         }
     }
 
+    
     isEOT() {
         return this.currentIndex > this.tokens.length - 1
     }
@@ -111,3 +114,4 @@ export default class Parser {
         this.lineNumber++
     }
 }
+

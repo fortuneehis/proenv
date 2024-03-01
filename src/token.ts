@@ -14,8 +14,6 @@ export default class Token {
     constructor(
         public type: string, 
         public value: string, 
-        // public start: number, 
-        // public end:number
         ) {
 
     }

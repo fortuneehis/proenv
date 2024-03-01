@@ -3,7 +3,7 @@ import Parser from "./parser";
 
 
 const lexer = new Lexer(`
-    AB=[]
+    >AB=[]
     BZ=[
         XF=[
             DS=4
