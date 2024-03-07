@@ -5,9 +5,10 @@
   "license": "MIT",
   "scripts": {
     "build": "npx tsc",
-    "run":  "yarn build && node ./out/index.js"
+    "run": "yarn build && node ./out/index.js"
   },
   "devDependencies": {
+    "@types/node": "^20.11.24",
     "typescript": "^5.3.3"
   }
 }

@@ -5,7 +5,10 @@ export enum TokenTypes {
     LBRAC = "LBRAC",
     RBRAC = "RBRAC",
     SEPERATOR = "SEPERATOR",
+    PRIVATE_VARS = "PRIVATE_VARS",
     ATOM = "ATOM",
+    VAR = "VAR",
+    COMMENT = "COMMENT",
     EOF = "EOF"
 }
 

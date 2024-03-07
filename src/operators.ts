@@ -5,6 +5,7 @@ const operators: {[key: string]: TokenTypes} = {
     "[": TokenTypes.LBRAC,
     "]": TokenTypes.RBRAC,
     ",": TokenTypes.SEPERATOR,
+    "#": TokenTypes.COMMENT
 }
 
 export default operators

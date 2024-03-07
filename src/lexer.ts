@@ -3,27 +3,23 @@ import Token, { TokenTypes } from "./token"
 
 
 export default class Lexer {
-    index: number = 0
-    lastIndex: number = this.source.length - 1
+    private index: number = 0
+    private lastIndex: number = this.source.length - 1
     tokens: Token[] = []
 
     constructor(private source: string) {
         this.tokenize()
     } 
-
-    peek() {
-        return this.source[this.index]
-    }
     
-    seek() {
+    private seek() {
         return this.source[this.index++]
     }
 
-    isEOF() {
+    private isEOF() {
         return this.index > this.lastIndex
     }
 
-    tokenize() {
+    private tokenize() {
 
         while(!this.isEOF()) {
             const char = this.seek()
@@ -39,11 +35,23 @@ export default class Lexer {
                 case "]": 
                     token = new Token(TokenTypes.RBRAC, char)
                     break
+                case ">":
+                    token = new Token(TokenTypes.VAR, char)
+                    break
+                case "%": 
+                    token = new Token(TokenTypes.PRIVATE_VARS, char)
+                    break
+                case "#":
+                    const comment = this.readAtom((char)=> char === "\n")
+                    token = new Token(TokenTypes.COMMENT, comment)
+                    break
                 case "\n": 
                     token = new Token(TokenTypes.NEWLINE, char)
                     break
                 default: 
-                    const atom = this.readAtom()
+                    const atom = this.readAtom((char)=> this.isWhitespace(char) 
+                    || operators[char] !== undefined 
+                    || char === "\n")
                     token = new Token(TokenTypes.ATOM, atom)
             }
 
@@ -57,25 +65,22 @@ export default class Lexer {
         }
     }
 
-    isWhitespace(char: string) {
+    private isWhitespace(char: string) {
         return char === " "
     }
 
-    isNewline(char: string) {
+    private isNewline(char: string) {
         return char === "\n"
     }
 
-    readAtom() {
+    private readAtom(until: (char: string)=> boolean) {
         this.index--
         let atom = ""
 
         while(!this.isEOF()) {
             const char = this.seek()
 
-            if(this.isWhitespace(char) 
-            || operators[char] !== undefined 
-            || char === "\n") {
-
+            if(until(char)) {
                 this.index--
                 break
             }

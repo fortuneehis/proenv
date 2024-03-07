@@ -5,13 +5,15 @@ type ParserOptions = {
 }
 
 export default class Parser {
-    currentIndex: number = 0
+    private currentIndex: number = 0
     
-    lineNumber: number = 1
+    private lineNumber: number = 1
 
-    output: object = {}
+    private privatePairs: { [key: string]: any } = {}
 
-    options: ParserOptions = {
+    output: { [key: string]: any } = {}
+
+    private options: ParserOptions = {
         keysToLowercase: false
     }
 
@@ -24,57 +26,73 @@ export default class Parser {
         }
 
         try {
-            this.output = this.parse()
+            this.output = this.parse(true)
         } catch(err) {
             console.log((err as Error).message)
-        }
-        
-        
+        } 
     }
 
-    parse(runUntil?: ()=> boolean) {
+    private parse(init: boolean, runUntil?: ()=> boolean) {
+        
         let result: {[key: string]: unknown} = {}
+        let parsingPrivatePairs = init
+
         while(!this.isEOT()) {
             const token = this.peek()
-            if(token.type === TokenTypes.NEWLINE) {
-                this.lineNumber++
+            if(token.type === TokenTypes.NEWLINE || token.type === TokenTypes.COMMENT) {
+                this.nextLine()
                 this.currentIndex++
+                continue
             }
+
+            if(parsingPrivatePairs && token.type === TokenTypes.VAR) {
+                
+                const {key, value} = this.parsePrivatePairs()
+                
+                this.privatePairs = {
+                    ...this.privatePairs,
+                    [key]: value
+                }
+                continue
+            } 
+            
+
+            if(this.peek().type === TokenTypes.VAR) {
+                throw new Error("Private key-value pairs should be declared before the public key-value pairs")
+            }
+
             if(runUntil?.()) break
-            const key = this.expect(TokenTypes.ATOM) as Token
-            this.expect(TokenTypes.ASSIGN)
-            const value = this.getValue()
-            this.expect(TokenTypes.NEWLINE)
-        this.lineNumber++
+            const {key, value} = this.parseExpression()
+            
+            parsingPrivatePairs = false
+
         
-        result = {
+            result = {
                 ...result,
-               ...(!key.value.startsWith(">") ? (
-                        this.addToMap(key.value, value && value.value ? value.value : value ) 
-                    ) : null)
+                ...this.addToMap(key, value) 
             }
 
         }
         return result
     }
 
-    peek() {
+    private peek() {
         return this.tokens[this.currentIndex]
     }
 
-    seek() {
+    private seek() {
         return this.tokens[this.currentIndex++]
     }
 
 
-    getValue() {
+    private getValue() {
         const token = this.peek()
 
         if(token.type === TokenTypes.NEWLINE) return undefined
 
         if(token.type === TokenTypes.LBRAC) {
             this.seek()
-            const result =  this.parse(()=> this.peek().type === TokenTypes.RBRAC)
+            const result =  this.parse(false, ()=> this.peek().type === TokenTypes.RBRAC)
             this.expect(TokenTypes.RBRAC)
             return result
         }
@@ -86,8 +104,13 @@ export default class Parser {
 
     }
 
-    expect(type: TokenTypes, strict: boolean = true) {
+    private expect(type: TokenTypes, strict: boolean = true): Token | false {
         const token = this.seek()
+        if(token.type === TokenTypes.COMMENT) {
+            this.nextLine()
+            this.expect(TokenTypes.NEWLINE)
+            return this.expect(type, strict)
+        }
         if(token.type !== type) {
             if(strict) throw new Error(`Syntax Error 
             at Line ${this.lineNumber}.
@@ -98,19 +121,43 @@ export default class Parser {
         return token
     }
 
-    addToMap(key: string, value: unknown) {
+
+    private addToMap(key: string, value: unknown) {
         const  {keysToLowercase} = this.options
         return {
             [keysToLowercase ? key.toLowerCase() : key]: value
         }
     }
 
+    private parsePrivatePairs() {
+        this.expect(TokenTypes.VAR)
+        const {key, value} = this.parseExpression()
+        return {
+            key,
+            value
+        }
+    }
+
+    private parseExpression() {
+        const key = this.expect(TokenTypes.ATOM) as Token
+        if(!/^[a-zA-Z]+$/ig.test(key.value)) throw new Error(`Keys should on contain alphabets at line ${this.lineNumber}`) 
+        this.expect(TokenTypes.ASSIGN)
+        const value = this.getValue()
+        this.expect(TokenTypes.NEWLINE)
+        this.nextLine()
+
+        return {
+            key: key.value,
+            value: value && value.value ? value.value : value
+        }
+    }
+
     
-    isEOT() {
+    private isEOT() {
         return this.currentIndex > this.tokens.length - 1
     }
 
-    nextLine() {
+    private nextLine() {
         this.lineNumber++
     }
 }
