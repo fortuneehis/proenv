@@ -1,17 +1,25 @@
+import { resolve } from "path";
 import Lexer from "./lexer";
-import Parser from "./parser";
-import * as fs from "fs"
-
-const FILE_EXTENSION = "env"
+import Parser, { ParserOptions } from "./parser";
+import { getEnvData } from "./util";
 
 
-const lexer = new Lexer(fs.readFileSync(__dirname+"/../.env").toString("utf-8"))
+export default function config(path?: string | string[], options?: ParserOptions) {
+  
+    const data = getEnvData(path ?? resolve(process.cwd(), ".env"))
 
-const parser = new Parser(lexer.tokens)
+    const lexer = new Lexer(data)
 
-// process.env = {
-//     ...process.env,
-//     ...parser.output
-// }
+    console.log(lexer.tokens)
 
-console.log(parser.output)
+    const parser = new Parser(lexer.tokens, options)
+    
+    process.env = Object.freeze({
+        ...process.env,
+        ...parser.output
+    }) as Readonly<{ 
+        [key: keyof typeof parser.output]: any
+    }>
+}
+
+

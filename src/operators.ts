@@ -4,8 +4,9 @@ const operators: {[key: string]: TokenTypes} = {
     "=": TokenTypes.ASSIGN,
     "[": TokenTypes.LBRAC,
     "]": TokenTypes.RBRAC,
-    ",": TokenTypes.SEPERATOR,
-    "#": TokenTypes.COMMENT
+    "#": TokenTypes.COMMENT,
+    "'": TokenTypes.SINGLE_QUOTES,
+    '"': TokenTypes.DOUBLE_QUOTES,
 }
 
 export default operators

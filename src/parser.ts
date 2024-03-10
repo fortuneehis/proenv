@@ -1,7 +1,8 @@
 import Token, { TokenTypes } from "./token";
 
-type ParserOptions = {
+export type ParserOptions = {
     keysToLowercase: boolean
+    debug: boolean
 }
 
 export default class Parser {
@@ -14,7 +15,8 @@ export default class Parser {
     output: { [key: string]: any } = {}
 
     private options: ParserOptions = {
-        keysToLowercase: false
+        keysToLowercase: false,
+        debug: false
     }
 
     constructor(private tokens: Token[], options?: ParserOptions) {
@@ -28,7 +30,7 @@ export default class Parser {
         try {
             this.output = this.parse(true)
         } catch(err) {
-            console.log((err as Error).message)
+            if(options?.debug) console.log((err as Error).message)
         } 
     }
 
@@ -39,14 +41,23 @@ export default class Parser {
 
         while(!this.isEOT()) {
             const token = this.peek()
-            if(token.type === TokenTypes.NEWLINE || token.type === TokenTypes.COMMENT) {
+            if(token.type === TokenTypes.NEWLINE) {
                 this.nextLine()
                 this.currentIndex++
                 continue
             }
 
+            if(token.type === TokenTypes.WHITE_SPACE) {
+                this.currentIndex++
+                continue
+            }
+
+            if(token.type === TokenTypes.COMMENT) {
+                this.currentIndex++
+                continue
+            }
+
             if(parsingPrivatePairs && token.type === TokenTypes.VAR) {
-                
                 const {key, value} = this.parsePrivatePairs()
                 
                 this.privatePairs = {
@@ -85,37 +96,57 @@ export default class Parser {
     }
 
 
-    private getValue() {
+    private getValue(): Token | {[key: string]: any} | string | undefined {
         const token = this.peek()
 
-        if(token.type === TokenTypes.NEWLINE) return undefined
 
-        if(token.type === TokenTypes.LBRAC) {
-            this.seek()
-            const result =  this.parse(false, ()=> this.peek().type === TokenTypes.RBRAC)
-            this.expect(TokenTypes.RBRAC)
-            return result
+        switch(token.type) {
+            case TokenTypes.NEWLINE:
+            case TokenTypes.COMMENT:
+                return undefined
+            
+            case TokenTypes.DOUBLE_QUOTES:
+                this.expect(TokenTypes.DOUBLE_QUOTES)
+                const doubleQuotesString = this.expect(TokenTypes.MULTI_LINE_STRING)
+                this.expect(TokenTypes.DOUBLE_QUOTES)
+                return doubleQuotesString as Token
+
+            case TokenTypes.SINGLE_QUOTES:
+                this.expect(TokenTypes.SINGLE_QUOTES)
+                const singleQuotesString = this.expect(TokenTypes.MULTI_LINE_STRING)
+                this.expect(TokenTypes.SINGLE_QUOTES)
+                return singleQuotesString as Token
+
+            case TokenTypes.LBRAC:
+                this.seek()
+                const result = this.parse(false, ()=> this.peek().type === TokenTypes.RBRAC)
+                this.expect(TokenTypes.RBRAC)
+                return result
         }
 
         const value = this.expect(TokenTypes.ATOM) as Token
 
         return value
-
-
     }
 
     private expect(type: TokenTypes, strict: boolean = true): Token | false {
         const token = this.seek()
+
+        if(!token) {
+            throw new Error(`[Parse Error] 
+            Unexpected Token
+            Line ${this.lineNumber}.
+            Expected: ${type}`)
+        }
+
         if(token.type === TokenTypes.COMMENT) {
-            this.nextLine()
-            this.expect(TokenTypes.NEWLINE)
             return this.expect(type, strict)
         }
         if(token.type !== type) {
-            if(strict) throw new Error(`Syntax Error 
-            at Line ${this.lineNumber}.
-            Expected: ${type}
-            Got: ${token.type}`)
+            if(strict) throw new Error(`[Parse Error] 
+            Unexpected Token
+            Line ${this.lineNumber}.
+            Got: ${token.value}`)
             return false
         }
         return token
@@ -140,7 +171,7 @@ export default class Parser {
 
     private parseExpression() {
         const key = this.expect(TokenTypes.ATOM) as Token
-        if(!/^[a-zA-Z]+$/ig.test(key.value)) throw new Error(`Keys should on contain alphabets at line ${this.lineNumber}`) 
+        //if(!/^[a-zA-Z_-]+$/ig.test(key.value)) throw new Error(`Keys should on contain alphabets at line ${this.lineNumber}`) 
         this.expect(TokenTypes.ASSIGN)
         const value = this.getValue()
         this.expect(TokenTypes.NEWLINE)
@@ -148,7 +179,7 @@ export default class Parser {
 
         return {
             key: key.value,
-            value: value && value.value ? value.value : value
+            value: typeof value === "string" ? value : (value && value.value ? value.value : value)
         }
     }
 

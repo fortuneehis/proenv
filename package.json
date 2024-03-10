@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "npx tsc",
-    "run": "yarn build && node ./out/index.js"
+    "run": "yarn build && node ./index.js"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
