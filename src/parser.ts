@@ -10,9 +10,11 @@ export default class Parser {
     
     private lineNumber: number = 1
 
-    private privatePairs: { [key: string]: any } = {}
+    private variables: { [key: string]: any } = {}
 
-    output: { [key: string]: any } = {}
+    output: { [key: string]: any } = {
+        ...process.env
+    }
 
     private options: ParserOptions = {
         keysToLowercase: false,
@@ -28,7 +30,9 @@ export default class Parser {
         }
 
         try {
-            this.output = this.parse(true)
+            this.output = {
+                ...(this.parse(true))
+            }
         } catch(err) {
             if(options?.debug) console.log((err as Error).message)
         } 
@@ -57,18 +61,18 @@ export default class Parser {
                 continue
             }
 
-            if(parsingPrivatePairs && token.type === TokenTypes.VAR) {
+            if(parsingPrivatePairs && token.type === TokenTypes.PRIVATE_VARS) {
                 const {key, value} = this.parsePrivatePairs()
                 
-                this.privatePairs = {
-                    ...this.privatePairs,
+                this.variables = {
+                    ...this.variables,
                     [key]: value
                 }
                 continue
             } 
             
 
-            if(this.peek().type === TokenTypes.VAR) {
+            if(this.peek().type === TokenTypes.PRIVATE_VARS) {
                 throw new Error("Private key-value pairs should be declared before the public key-value pairs")
             }
 
@@ -76,6 +80,11 @@ export default class Parser {
             const {key, value} = this.parseExpression()
             
             parsingPrivatePairs = false
+
+            this.variables = {
+                ...this.variables,
+                [key]: value
+            }
 
         
             result = {
@@ -116,6 +125,10 @@ export default class Parser {
                 const singleQuotesString = this.expect(TokenTypes.MULTI_LINE_STRING)
                 this.expect(TokenTypes.SINGLE_QUOTES)
                 return singleQuotesString as Token
+            
+            case TokenTypes.VARS:
+                const value = this.parseVariables()
+                return value as Token
 
             case TokenTypes.LBRAC:
                 this.seek()
@@ -125,7 +138,6 @@ export default class Parser {
         }
 
         const value = this.expect(TokenTypes.ATOM) as Token
-
         return value
     }
 
@@ -152,7 +164,6 @@ export default class Parser {
         return token
     }
 
-
     private addToMap(key: string, value: unknown) {
         const  {keysToLowercase} = this.options
         return {
@@ -161,12 +172,42 @@ export default class Parser {
     }
 
     private parsePrivatePairs() {
-        this.expect(TokenTypes.VAR)
+        this.expect(TokenTypes.PRIVATE_VARS)
         const {key, value} = this.parseExpression()
         return {
             key,
             value
         }
+    }
+
+    parseVariables() {
+        this.expect(TokenTypes.VARS)
+        const token = this.expect(TokenTypes.ATOM) as Token
+        const variables = {...this.variables, ...this.output}
+        
+        if(!(token.value in variables)) {
+            console.log(token.value, " value")
+            throw new Error(`Variable is not defined on line ${this.lineNumber}`)
+        }
+        let variable = variables[token.value]
+        if(this.peek().type === TokenTypes.DOT) { 
+
+            while(this.peek().type !== TokenTypes.NEWLINE) {
+                this.expect(TokenTypes.DOT)
+                if(typeof variable !== "object") {
+                    throw new Error(`[Parse Error]
+                    ${variable} is not a valid object.
+                    Line: ${this.lineNumber}`)
+                }
+                const childToken = this.expect(TokenTypes.ATOM) as Token
+                variable = variable[childToken.value]
+                
+            }
+        }
+        
+        this.expect(TokenTypes.NEWLINE)
+        this.nextLine()
+        return variable
     }
 
     private parseExpression() {

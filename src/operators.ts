@@ -6,6 +6,7 @@ const operators: {[key: string]: TokenTypes} = {
     "]": TokenTypes.RBRAC,
     "#": TokenTypes.COMMENT,
     "'": TokenTypes.SINGLE_QUOTES,
+    ".": TokenTypes.DOT,
     '"': TokenTypes.DOUBLE_QUOTES,
 }
 

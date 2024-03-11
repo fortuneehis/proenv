@@ -39,16 +39,19 @@ export default class Lexer {
                     token = new Token(TokenTypes.RBRAC, char)
                     break
                 case ">":
-                    token = new Token(TokenTypes.VAR, char)
-                    break
-                case "%": 
                     token = new Token(TokenTypes.PRIVATE_VARS, char)
+                    break
+                case "$": 
+                    token = new Token(TokenTypes.VARS, char)
                     break
                 case '"':
                     token = this.readString(char, (char)=> char === '"', TokenTypes.DOUBLE_QUOTES)
                     break
                 case "'":
                     token = this.readString(char, (char)=> char === "'", TokenTypes.SINGLE_QUOTES)
+                    break
+                case ".":
+                    token = new Token(TokenTypes.DOT, char)
                     break
                 case " ":
                     token = new Token(TokenTypes.WHITE_SPACE, char)
@@ -67,9 +70,6 @@ export default class Lexer {
 
                     token = new Token(TokenTypes.ATOM, atom)
             }
-
-            const temp = 
-
 
             this.tokens.push(...(Array.isArray(token) ? token  : [token]))
 
