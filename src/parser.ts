@@ -34,7 +34,7 @@ export default class Parser {
                 ...(this.parse(true))
             }
         } catch(err) {
-            if(options?.debug) console.log((err as Error).message)
+            if(options?.debug) console.error((err as Error).message)
         } 
     }
 
@@ -70,11 +70,29 @@ export default class Parser {
                 }
                 continue
             } 
-            
 
             if(this.peek().type === TokenTypes.PRIVATE_VARS) {
                 throw new Error("Private key-value pairs should be declared before the public key-value pairs")
             }
+
+            if(!init) {
+                if(this.peek().type === TokenTypes.DOT) {
+                    this.expect(TokenTypes.DOT)
+                    this.expect(TokenTypes.DOT)
+                    this.expect(TokenTypes.DOT)
+                    const {key, value}= this.parseVariables()
+
+                    if(typeof value !== "object") {
+                        throw new Error(`${key} is not an object`)
+                    }
+                    result = {
+                        ...result,
+                       ...value
+                    }
+                    continue
+                }
+            }
+
 
             if(runUntil?.()) break
             const {key, value} = this.parseExpression()
@@ -127,7 +145,7 @@ export default class Parser {
                 return singleQuotesString as Token
             
             case TokenTypes.VARS:
-                const value = this.parseVariables()
+                const {value} = this.parseVariables()
                 return value as Token
 
             case TokenTypes.LBRAC:
@@ -158,6 +176,7 @@ export default class Parser {
             if(strict) throw new Error(`[Parse Error] 
             Unexpected Token
             Line ${this.lineNumber}.
+            Expected ${type}.
             Got: ${token.value}`)
             return false
         }
@@ -186,41 +205,52 @@ export default class Parser {
         const variables = {...this.variables, ...this.output}
         
         if(!(token.value in variables)) {
-            console.log(token.value, " value")
             throw new Error(`Variable is not defined on line ${this.lineNumber}`)
         }
-        let variable = variables[token.value]
+        
+        let variable = {key: token.value, value: variables[token.value]}
         if(this.peek().type === TokenTypes.DOT) { 
-
-            while(this.peek().type !== TokenTypes.NEWLINE) {
+            while(this.peek().type === TokenTypes.DOT) {
                 this.expect(TokenTypes.DOT)
-                if(typeof variable !== "object") {
+                if(typeof variable.value !== "object") {
                     throw new Error(`[Parse Error]
-                    ${variable} is not a valid object.
+                    ${variable.value} is not a valid object.
                     Line: ${this.lineNumber}`)
                 }
                 const childToken = this.expect(TokenTypes.ATOM) as Token
-                variable = variable[childToken.value]
-                
+                variable = {
+                    key: childToken.value,
+                    value: variable.value[childToken.value]
+                }
             }
         }
-        
+        this.skipWhiteSpace()
         this.expect(TokenTypes.NEWLINE)
+        this.currentIndex--
         this.nextLine()
         return variable
     }
 
     private parseExpression() {
         const key = this.expect(TokenTypes.ATOM) as Token
-        //if(!/^[a-zA-Z_-]+$/ig.test(key.value)) throw new Error(`Keys should on contain alphabets at line ${this.lineNumber}`) 
         this.expect(TokenTypes.ASSIGN)
         const value = this.getValue()
+        this.skipWhiteSpace()
         this.expect(TokenTypes.NEWLINE)
         this.nextLine()
 
         return {
             key: key.value,
             value: typeof value === "string" ? value : (value && value.value ? value.value : value)
+        }
+    }
+
+    skipWhiteSpace() {
+        if(this.peek().type === TokenTypes.WHITE_SPACE) {
+        
+            while(this.peek().type === TokenTypes.WHITE_SPACE) {
+                this.expect(TokenTypes.WHITE_SPACE)
+            }
         }
     }
 

@@ -57,6 +57,7 @@ export default class Lexer {
                     token = new Token(TokenTypes.WHITE_SPACE, char)
                     break
                 case "#":
+                    this.seek()
                     const comment = this.readAtom((char)=> char === "\n")
                     token = new Token(TokenTypes.COMMENT, comment)
                     break
