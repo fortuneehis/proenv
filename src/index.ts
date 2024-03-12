@@ -9,7 +9,6 @@ export default function config(path?: string | string[], options?: ParserOptions
     const data = getEnvData(path ?? resolve(process.cwd(), ".env"))
 
     const lexer = new Lexer(data)
-    console.log(lexer.tokens)
     const parser = new Parser(lexer.tokens, options)
     
     process.env = Object.freeze({

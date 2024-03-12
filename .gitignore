@@ -3,5 +3,5 @@
 out/
 node_modules/
 yarn.lock
-.env
+.env.*
 index.js

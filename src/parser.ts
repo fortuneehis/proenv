@@ -217,17 +217,21 @@ export default class Parser {
                     ${variable.value} is not a valid object.
                     Line: ${this.lineNumber}`)
                 }
-                const childToken = this.expect(TokenTypes.ATOM) as Token
+                const objectToken = this.expect(TokenTypes.ATOM) as Token
+
+                const object = variable.value[objectToken.value] 
+
+                if(!object) {
+                    throw new Error(`Variable is not defined on line ${this.lineNumber}`)
+                }
+
                 variable = {
-                    key: childToken.value,
-                    value: variable.value[childToken.value]
+                    key: objectToken.value,
+                    value: variable.value[objectToken.value]
                 }
             }
         }
         this.skipWhiteSpace()
-        this.expect(TokenTypes.NEWLINE)
-        this.currentIndex--
-        this.nextLine()
         return variable
     }
 
