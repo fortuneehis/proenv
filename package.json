@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "main": "index.js",
   "license": "MIT",
+  "files": ["./out", "Readme.md"],
   "scripts": {
     "build": "npx tsc",
     "run": "yarn build && node ./index.js"
