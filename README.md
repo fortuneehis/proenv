@@ -78,10 +78,6 @@ Comments can be added to your file either on separate lines or inline:
 SOME_KEY=SOME_VALUE # Inline comment
 ```
 
-### Variable Expansion
-
-You need to add the value of another variable in one of your variables? Use [dotenv-expand](https://github.com/motdotla/dotenv-expand).
-
 ## `config()`
 
 The `config` function accepts will read your `.env` file if a path to the env file(s) is not specified, parse the contents, assign it to
