@@ -1,4 +1,4 @@
-# superenv [![NPM version](https://img.shields.io/npm/v/dotenv.svg?style=flat-square)](https://www.npmjs.com/package/dotenv)
+# superenv
 Superenv is a dependency free package like [`dotenv`](https://www.npmjs.com/package/dotenv) but with extra features.
 
 ## Installation
