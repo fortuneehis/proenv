@@ -82,7 +82,7 @@ const config = require("superenv")
 
 config(undefined, {keyToLowercase: true}) 
 
-console.log(process.env) // { db: { username: "root", password: undefined, host: "localhost", port: "3306" }
+console.log(process.env) // { db: { username: "root", password: undefined, host: "localhost", port: "3306" }}
 ```
 
 ### Object spreading with the `...` syntax
