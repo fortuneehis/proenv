@@ -3,7 +3,6 @@ import Token, { TokenTypes } from "./token";
 
 export type ParserOptions = {
   keysToLowercase: boolean;
-  debug: boolean;
 };
 
 export default class Parser {
@@ -13,13 +12,14 @@ export default class Parser {
 
   private variables: { [key: string]: any } = {};
 
+  private error = "";
+
   output: { [key: string]: any } = {
     ...process.env,
   };
 
   private options: ParserOptions = {
     keysToLowercase: false,
-    debug: false,
   };
 
   constructor(
@@ -37,8 +37,8 @@ export default class Parser {
       this.output = {
         ...this.parse(true),
       };
-    } catch (err) {
-      if (options?.debug) console.error((err as Error).message);
+    } catch (err: unknown) {
+      this.error = "\n[Parse Error] \n" + (err as Error).message + "\n\n";
     }
   }
 
@@ -166,10 +166,9 @@ export default class Parser {
     const token = this.seek();
 
     if (!token) {
-      throw new Error(`[Parse Error] 
-            Unexpected Token
-            Line: ${this.lineNumber}.
-            Expected: ${operatorMap(type)}`);
+      throw new Error(
+        `Unexpected Token \nLine: ${this.lineNumber}. \nExpected: ${operatorMap(type)}`
+      );
     }
 
     if (token.type === TokenTypes.COMMENT) {
@@ -177,11 +176,9 @@ export default class Parser {
     }
     if (token.type !== type) {
       if (strict)
-        throw new Error(`[Parse Error] 
-            Unexpected Token
-            Line: ${this.lineNumber}
-            Expected: ${operatorMap(type)}
-            Got: ${operatorMap(token.type)}`);
+        throw new Error(
+          `Unexpected Token \nLine: ${this.lineNumber} \nExpected: ${operatorMap(type)} \nGot: ${operatorMap(token.type) || token.value}`
+        );
       return false;
     }
     return token;
@@ -217,9 +214,9 @@ export default class Parser {
       while (this.peek().type === TokenTypes.DOT) {
         this.expect(TokenTypes.DOT);
         if (typeof variable.value !== "object") {
-          throw new Error(`[Parse Error]
-                    ${variable.value} is not a valid object.
-                    Line: ${this.lineNumber}`);
+          throw new Error(
+            `${variable.value} is not a valid object. \nLine: ${this.lineNumber}`
+          );
         }
         const objectToken = this.expect(TokenTypes.ATOM) as Token;
 
@@ -241,7 +238,9 @@ export default class Parser {
 
   private parseExpression() {
     const key = this.expect(TokenTypes.ATOM) as Token;
+    this.skipWhiteSpace();
     this.expect(TokenTypes.ASSIGN);
+    this.skipWhiteSpace();
     const value = this.getValue();
     this.skipWhiteSpace();
     this.expect(TokenTypes.NEWLINE);
@@ -268,6 +267,10 @@ export default class Parser {
 
   private isEOT() {
     return this.currentIndex > this.tokens.length - 1;
+  }
+
+  getError() {
+    return this.error;
   }
 
   private nextLine() {

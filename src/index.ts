@@ -12,6 +12,10 @@ export default function config(
   const lexer = new Lexer(data);
   const parser = new Parser(lexer.tokens, options);
 
+  const error = parser.getError();
+
+  if (error.length > 0) return error;
+
   process.env = Object.freeze({
     ...process.env,
     ...parser.output,

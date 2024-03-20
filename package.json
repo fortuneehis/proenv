@@ -11,7 +11,7 @@
     "build": "yarn build:clean && npx tsc",
     "build:clean": "npx rimraf ./out",
     "lint": "npx eslint src/**/*.ts",
-    "build:run": "yarn build && node ./index.js"
+    "build:run": "yarn build && node ./index.js && yarn build:clean"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",

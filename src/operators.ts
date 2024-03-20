@@ -35,6 +35,6 @@ export const operatorMap = (type: TokenTypes | string) => {
     case TokenTypes.SINGLE_QUOTES:
       return "'";
     default:
-      return `unexpected token of type (${type})`;
+      return false;
   }
 };
