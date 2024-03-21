@@ -24,6 +24,7 @@ Import and configure proenv in your application:
 
 ```javascript
 const config = require("proenv")
+config()
 console.log(process.env)
 ```
 
@@ -32,6 +33,7 @@ Using ES6:
 ```javascript
 import config from "proenv"
 config()
+console.log(process.env)
 ```
 
 That's it. `process.env` now has the keys and values you defined in your `.env` file:
