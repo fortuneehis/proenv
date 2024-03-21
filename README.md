@@ -1,16 +1,16 @@
-# superenv
-Superenv is a dependency free package like [`dotenv`](https://www.npmjs.com/package/dotenv) but with extra features.
+# envx
+envx is a dependency free package like [`dotenv`](https://www.npmjs.com/package/dotenv) but with extra features.
 
 ## Installation
 
 ```bash
 # installing with npm
-npm install superenv --save
+npm install envx --save
 ```
 
 ```bash
 # installing with yarn
-yarn add superenv
+yarn add envx
 ```
 
 ## Usage Guide
@@ -20,17 +20,17 @@ Create a `.env` file in the root of your project.
 PORT=3000
 ```
 
-Import and configure superenv in your application:
+Import and configure envx in your application:
 
 ```javascript
-const config = require("superenv")
+const config = require("envx")
 console.log(process.env)
 ```
 
 Using ES6:
 
 ```javascript
-import config from "superenv"
+import config from "envx"
 config()
 ```
 
@@ -78,7 +78,7 @@ DB=[
 ```
 
 ```js
-const config = require("superenv")
+const config = require("envx")
 
 config(undefined, {keyToLowercase: true}) 
 
@@ -142,7 +142,7 @@ if (error) {
 Custom paths can be specified if your files containing environment varibales resides elsewhere in your application.
 
 ```js
-const config = require('superenv');
+const config = require('envx');
 
 config([".env", ".env.development", "/app/elsewhere/.env"]);
 ```
@@ -161,7 +161,7 @@ Default: `false`
 If set to true, tranforms the parsed keys of your env file(s) to lowercase.
 
 ```js
-const config = require('superenv');
+const config = require('envx');
 
 config(undefined, {
     keysToLowercase: true
