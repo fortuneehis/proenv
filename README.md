@@ -1,16 +1,16 @@
-# envx
-envx is a dependency free package like [`dotenv`](https://www.npmjs.com/package/dotenv) but with extra features.
+# env-x
+env-x is a dependency free package like [`dotenv`](https://www.npmjs.com/package/dotenv) but with extra features.
 
 ## Installation
 
 ```bash
 # installing with npm
-npm install envx --save
+npm install env-x --save
 ```
 
 ```bash
 # installing with yarn
-yarn add envx
+yarn add env-x
 ```
 
 ## Usage Guide
@@ -20,17 +20,17 @@ Create a `.env` file in the root of your project.
 PORT=3000
 ```
 
-Import and configure envx in your application:
+Import and configure env-x in your application:
 
 ```javascript
-const config = require("envx")
+const config = require("env-x")
 console.log(process.env)
 ```
 
 Using ES6:
 
 ```javascript
-import config from "envx"
+import config from "env-x"
 config()
 ```
 
@@ -78,7 +78,7 @@ DB=[
 ```
 
 ```js
-const config = require("envx")
+const config = require("env-x")
 
 config(undefined, {keyToLowercase: true}) 
 
@@ -142,7 +142,7 @@ if (error) {
 Custom paths can be specified if your files containing environment varibales resides elsewhere in your application.
 
 ```js
-const config = require('envx');
+const config = require('env-x');
 
 config([".env", ".env.development", "/app/elsewhere/.env"]);
 ```
@@ -161,7 +161,7 @@ Default: `false`
 If set to true, tranforms the parsed keys of your env file(s) to lowercase.
 
 ```js
-const config = require('envx');
+const config = require('env-x');
 
 config(undefined, {
     keysToLowercase: true
