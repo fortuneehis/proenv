@@ -1,16 +1,16 @@
-# env-x
-env-x is a dependency free package like [`dotenv`](https://www.npmjs.com/package/dotenv) but with extra features.
+# proenv
+proenv is a dependency free package like [`dotenv`](https://www.npmjs.com/package/dotenv) but with extra features.
 
 ## Installation
 
 ```bash
 # installing with npm
-npm install env-x --save
+npm install proenv --save
 ```
 
 ```bash
 # installing with yarn
-yarn add env-x
+yarn add proenv
 ```
 
 ## Usage Guide
@@ -20,17 +20,17 @@ Create a `.env` file in the root of your project.
 PORT=3000
 ```
 
-Import and configure env-x in your application:
+Import and configure proenv in your application:
 
 ```javascript
-const config = require("env-x")
+const config = require("proenv")
 console.log(process.env)
 ```
 
 Using ES6:
 
 ```javascript
-import config from "env-x"
+import config from "proenv"
 config()
 ```
 
@@ -78,7 +78,7 @@ DB=[
 ```
 
 ```js
-const config = require("env-x")
+const config = require("proenv")
 
 config(undefined, {keyToLowercase: true}) 
 
@@ -142,7 +142,7 @@ if (error) {
 Custom paths can be specified if your files containing environment varibales resides elsewhere in your application.
 
 ```js
-const config = require('env-x');
+const config = require('proenv');
 
 config([".env", ".env.development", "/app/elsewhere/.env"]);
 ```
@@ -161,7 +161,7 @@ Default: `false`
 If set to true, tranforms the parsed keys of your env file(s) to lowercase.
 
 ```js
-const config = require('env-x');
+const config = require('proenv');
 
 config(undefined, {
     keysToLowercase: true
