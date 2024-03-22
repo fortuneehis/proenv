@@ -1,15 +1,24 @@
 {
   "name": "proenv",
-  "version": "0.1.0",
+  "version": "1.0.2",
   "main": "lib/index.js",
   "license": "MIT",
   "files": [
-    "./out",
+    "./lib",
     "README.md"
+  ],
+  "keywords": [
+    "env",
+    ".env",
+    "environment variables",
+    "proenv",
+    "config",
+    "environment",
+    "variables"
   ],
   "scripts": {
     "build": "yarn build:clean && npx tsc",
-    "build:clean": "npx rimraf ./out",
+    "build:clean": "npx rimraf ./lib",
     "lint": "npx eslint src/**/*.ts",
     "build:run": "yarn build && node ./index.js && yarn build:clean"
   },

@@ -32,6 +32,5 @@ const isEnv = (path: string) => {
 };
 
 const fileExists = (path: string) => {
-  const stats = fs.statSync(path);
-  return fs.existsSync(path) && stats.isFile();
+  return fs.existsSync(path) && fs.statSync(path).isFile();
 };

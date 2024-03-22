@@ -1,4 +1,5 @@
 # proenv
+
 proenv is a dependency free package like [`dotenv`](https://www.npmjs.com/package/dotenv) but with extra features.
 
 ## Installation
@@ -16,6 +17,7 @@ yarn add proenv
 ## Usage Guide
 
 Create a `.env` file in the root of your project.
+
 ```dosini
 PORT=3000
 ```
@@ -23,29 +25,32 @@ PORT=3000
 Import and configure proenv in your application:
 
 ```javascript
-const config = require("proenv")
-config()
-console.log(process.env)
+const { config } = require("proenv");
+
+config();
+console.log(process.env);
 ```
 
 Using ES6:
 
 ```javascript
-import config from "proenv"
-config()
-console.log(process.env)
+import { config } from "proenv";
+
+config();
+console.log(process.env);
 ```
 
 That's it. `process.env` now has the keys and values you defined in your `.env` file:
 All key-value pairs defined in your `.env` should be available in your `process.env`
 
 ## Features
-* Declaring Private key-value pairs
-* Key-value pairs reuse
-* Declaring values as objects
-* Object spreading with the `...` syntax
-* Comments
-* Multiline Values
+
+- Declaring Private key-value pairs
+- Key-value pairs reuse
+- Declaring values as objects
+- Object spreading with the `...` syntax
+- Comments
+- Multiline Values
 
 ### Declaring Private key-value pairs
 
@@ -68,7 +73,7 @@ ANOTHER_KEY=$SOME_KEY
 
 ### Declaring values as objects.
 
-Values can be declared as objects and will be loaded as objects into `process.env`. 
+Values can be declared as objects and will be loaded as objects into `process.env`.
 
 ```dosini
 DB=[
@@ -80,11 +85,11 @@ DB=[
 ```
 
 ```js
-const config = require("proenv")
+const { config } = require("proenv");
 
-config(undefined, {keyToLowercase: true}) 
+config(undefined, { keyToLowercase: true });
 
-console.log(process.env) // { db: { username: "root", password: undefined, host: "localhost", port: "3306" }}
+console.log(process.env); // { db: { username: "root", password: undefined, host: "localhost", port: "3306" }}
 ```
 
 ### Object spreading with the `...` syntax
@@ -108,12 +113,14 @@ DB_DEV=[
 ### Comments
 
 Comments can be added to your file either on separate lines or inline:
+
 ```dosini
 # Seperate Comment
 SOME_KEY=SOME_VALUE # Inline comment
 ```
 
 ### Multiline Values
+
 Values can also be multiline using single or double quotes.
 
 ```dosini
@@ -128,10 +135,10 @@ The `config` function accepts will read your `.env` file if a path to the env fi
 `process.env` else an error will be returned.
 
 ```js
-const error = config()
+const error = config();
 
 if (error) {
-  throw result.error
+  throw result.error;
 }
 ```
 
@@ -144,28 +151,25 @@ if (error) {
 Custom paths can be specified if your files containing environment varibales resides elsewhere in your application.
 
 ```js
-const config = require('proenv');
+const { config } = require("proenv");
 
 config([".env", ".env.development", "/app/elsewhere/.env"]);
 ```
 
 They will be parsed in order and combined with `process.env`.
 
-
-
 ##### options
 
 ###### keyToLowercase
-
 
 Default: `false`
 
 If set to true, tranforms the parsed keys of your env file(s) to lowercase.
 
 ```js
-const config = require('proenv');
+const { config } = require("proenv");
 
 config(undefined, {
-    keysToLowercase: true
+  keysToLowercase: true,
 });
 ```

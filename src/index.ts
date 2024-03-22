@@ -3,10 +3,7 @@ import Lexer from "./lexer";
 import Parser, { ParserOptions } from "./parser";
 import { getEnvData } from "./util";
 
-export default function config(
-  path?: string | string[],
-  options?: ParserOptions
-) {
+export function config(path?: string | string[], options?: ParserOptions) {
   const data = getEnvData(path ?? resolve(process.cwd(), ".env"));
 
   const lexer = new Lexer(data);

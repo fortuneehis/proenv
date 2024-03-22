@@ -1,6 +1,6 @@
 
 
-out/
+lib/
 node_modules/
 yarn.lock
 .env
