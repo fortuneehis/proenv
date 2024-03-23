@@ -138,7 +138,7 @@ The `config` function accepts will read your `.env` file if a path to the env fi
 const error = config();
 
 if (error) {
-  throw result.error;
+  throw error;
 }
 ```
 
