@@ -1,10 +1,6 @@
 import { operatorMap } from "./operators";
 import Token, { TokenTypes } from "./token";
 
-export type ParserOptions = {
-  keysToLowercase: boolean;
-};
-
 export default class Parser {
   private currentIndex: number = 0;
 
@@ -14,31 +10,14 @@ export default class Parser {
 
   private error = "";
 
-  output: { [key: string]: any } = {
-    ...process.env,
-  };
+  output: { [key: string]: any } = {};
 
-  private options: ParserOptions = {
-    keysToLowercase: false,
-  };
-
-  constructor(
-    private readonly tokens: Token[],
-    options?: ParserOptions
-  ) {
-    if (options) {
-      this.options = {
-        ...this.options,
-        ...options,
-      };
-    }
-
+  constructor(private readonly tokens: Token[]) {
     try {
-      this.output = {
-        ...this.parse(true),
-      };
+      const result = this.parse(true);
+      this.output = { ...result };
     } catch (err: unknown) {
-      this.error = "\n[Parse Error] \n" + (err as Error).message + "\n\n";
+      this.error = "\n[Parse Error] \n" + (err as SyntaxError).message + "\n\n";
     }
   }
 
@@ -75,7 +54,7 @@ export default class Parser {
       }
 
       if (this.peek().type === TokenTypes.PRIVATE_VARS) {
-        throw new Error(
+        throw new SyntaxError(
           "Private key-value pairs should be declared before the public key-value pairs"
         );
       }
@@ -88,7 +67,7 @@ export default class Parser {
           const { key, value } = this.parseVariables();
 
           if (typeof value !== "object") {
-            throw new Error(`${key} is not an object`);
+            throw new SyntaxError(`${key} is not an object`);
           }
           result = {
             ...result,
@@ -110,7 +89,8 @@ export default class Parser {
 
       result = {
         ...result,
-        ...this.addToMap(key, value),
+        [key]:
+          init && typeof value === "object" ? JSON.stringify(value) : value,
       };
     }
     return result;
@@ -124,29 +104,47 @@ export default class Parser {
     return this.tokens[this.currentIndex++];
   }
 
-  private getValue(): Token | { [key: string]: any } | string | undefined {
+  private getValue():
+    | Token
+    | { [key: string]: any }
+    | string
+    | number
+    | boolean
+    | undefined {
+    this.skipWhiteSpace();
+    this.expect(TokenTypes.ASSIGN);
+    this.skipWhiteSpace();
     const token = this.peek();
+    let value: Token | { [key: string]: any } | string | boolean | undefined;
 
     switch (token.type) {
       case TokenTypes.NEWLINE:
       case TokenTypes.COMMENT:
-        return undefined;
+        value = undefined;
+        break;
 
       case TokenTypes.DOUBLE_QUOTES:
         this.expect(TokenTypes.DOUBLE_QUOTES);
-        const doubleQuotesString = this.expect(TokenTypes.MULTI_LINE_STRING);
+        const doubleQuotesString = this.expect(
+          TokenTypes.MULTI_LINE_STRING
+        ) as Token;
         this.expect(TokenTypes.DOUBLE_QUOTES);
-        return doubleQuotesString as Token;
+        value = doubleQuotesString.value;
+        break;
 
       case TokenTypes.SINGLE_QUOTES:
         this.expect(TokenTypes.SINGLE_QUOTES);
-        const singleQuotesString = this.expect(TokenTypes.MULTI_LINE_STRING);
+        const singleQuotesString = this.expect(
+          TokenTypes.MULTI_LINE_STRING
+        ) as Token;
         this.expect(TokenTypes.SINGLE_QUOTES);
-        return singleQuotesString as Token;
+        value = singleQuotesString.value;
+        break;
 
       case TokenTypes.VARS:
-        const { value } = this.parseVariables();
-        return value as Token;
+        const variable = this.parseVariables();
+        value = variable.value;
+        break;
 
       case TokenTypes.LBRAC:
         this.seek();
@@ -155,18 +153,32 @@ export default class Parser {
           () => this.peek().type === TokenTypes.RBRAC
         );
         this.expect(TokenTypes.RBRAC);
-        return result;
+        value = result;
+        break;
+      default:
+        value = this.parseBool((this.expect(TokenTypes.ATOM) as Token).value);
+        break;
     }
 
-    const value = this.expect(TokenTypes.ATOM) as Token;
-    return value;
+    this.skipWhiteSpace();
+    this.expect(TokenTypes.NEWLINE);
+    this.nextLine();
+
+    return (() => {
+      const number = Number(value);
+      return typeof value === "boolean"
+        ? value
+        : Number.isNaN(number)
+          ? value
+          : number;
+    })();
   }
 
   private expect(type: TokenTypes, strict: boolean = true): Token | false {
     const token = this.seek();
 
     if (!token) {
-      throw new Error(
+      throw new SyntaxError(
         `Unexpected Token \nLine: ${this.lineNumber}. \nExpected: ${operatorMap(type)}`
       );
     }
@@ -176,19 +188,12 @@ export default class Parser {
     }
     if (token.type !== type) {
       if (strict)
-        throw new Error(
+        throw new SyntaxError(
           `Unexpected Token \nLine: ${this.lineNumber} \nExpected: ${operatorMap(type)} \nGot: ${operatorMap(token.type) || token.value}`
         );
       return false;
     }
     return token;
-  }
-
-  private addToMap(key: string, value: unknown) {
-    const { keysToLowercase } = this.options;
-    return {
-      [keysToLowercase ? key.toLowerCase() : key]: value,
-    };
   }
 
   private parsePrivatePairs() {
@@ -206,7 +211,9 @@ export default class Parser {
     const variables = { ...this.variables, ...this.output };
 
     if (!(token.value in variables)) {
-      throw new Error(`Variable is not defined on line ${this.lineNumber}`);
+      throw new SyntaxError(
+        `Variable is not defined on line ${this.lineNumber}`
+      );
     }
 
     let variable = { key: token.value, value: variables[token.value] };
@@ -214,7 +221,7 @@ export default class Parser {
       while (this.peek().type === TokenTypes.DOT) {
         this.expect(TokenTypes.DOT);
         if (typeof variable.value !== "object") {
-          throw new Error(
+          throw new SyntaxError(
             `${variable.value} is not a valid object. \nLine: ${this.lineNumber}`
           );
         }
@@ -223,7 +230,9 @@ export default class Parser {
         const object = variable.value[objectToken.value];
 
         if (!object) {
-          throw new Error(`Variable is not defined on line ${this.lineNumber}`);
+          throw new SyntaxError(
+            `Variable is not defined on line ${this.lineNumber}`
+          );
         }
 
         variable = {
@@ -237,23 +246,42 @@ export default class Parser {
   }
 
   private parseExpression() {
-    const key = this.expect(TokenTypes.ATOM) as Token;
-    this.skipWhiteSpace();
-    this.expect(TokenTypes.ASSIGN);
-    this.skipWhiteSpace();
+    const { value: topLevelKey } = this.expect(TokenTypes.ATOM) as Token;
+    if (this.peek().type === TokenTypes.DOT) {
+      let temp = { ...this.output, ...this.variables };
+      if (temp[topLevelKey] && typeof temp[topLevelKey] !== "object") {
+        throw new SyntaxError(`${topLevelKey} is not an object`);
+      }
+      temp[topLevelKey] = {
+        ...temp[topLevelKey],
+      };
+      let current = temp[topLevelKey];
+      const precedingKeys = [topLevelKey];
+      while (this.peek().type === TokenTypes.DOT) {
+        this.expect(TokenTypes.DOT);
+        const { value: key } = this.expect(TokenTypes.ATOM) as Token;
+        precedingKeys.push(key);
+        if (this.peek().type !== TokenTypes.DOT) {
+          (current[key] as ReturnType<typeof this.getValue>) = this.getValue();
+          return {
+            key: topLevelKey,
+            value: temp[topLevelKey],
+          };
+        }
+        if (current[key] && typeof current[key] !== "object") {
+          throw new SyntaxError(`${precedingKeys.join(".")} is not an object`);
+        }
+        current = current[key] = {
+          ...current[key],
+        };
+      }
+    }
+
     const value = this.getValue();
-    this.skipWhiteSpace();
-    this.expect(TokenTypes.NEWLINE);
-    this.nextLine();
 
     return {
-      key: key.value,
-      value:
-        typeof value === "string"
-          ? value
-          : value && value.value
-            ? value.value
-            : value,
+      key: topLevelKey,
+      value,
     };
   }
 
@@ -267,6 +295,10 @@ export default class Parser {
 
   private isEOT() {
     return this.currentIndex > this.tokens.length - 1;
+  }
+
+  private parseBool(value: string) {
+    return value === "true" ? true : value === "false" ? false : value;
   }
 
   getError() {

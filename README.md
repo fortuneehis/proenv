@@ -84,12 +84,30 @@ DB=[
 ]
 ```
 
+Alternatively,
+
+```dosini
+DB=[
+    CURRENCIES=[
+      NAIRA=[
+        CODE=NGN
+      ]
+    ]
+]
+```
+
+can be written as:
+
+```dosini
+DB.CURRENCIES.NAIRA.CODE=NGN
+```
+
 ```js
 const { config } = require("proenv");
 
-config(undefined, { keyToLowercase: true });
+config(undefined);
 
-console.log(process.env); // { db: { username: "root", password: undefined, host: "localhost", port: "3306" }}
+console.log(process.env); // { DB: { USERNAME: "root", PASSWORD: undefined, HOST: "localhost", PORT: "3306" }}
 ```
 
 ### Object spreading with the `...` syntax
@@ -157,19 +175,3 @@ config([".env", ".env.development", "/app/elsewhere/.env"]);
 ```
 
 They will be parsed in order and combined with `process.env`.
-
-##### options
-
-###### keyToLowercase
-
-Default: `false`
-
-If set to true, tranforms the parsed keys of your env file(s) to lowercase.
-
-```js
-const { config } = require("proenv");
-
-config(undefined, {
-  keysToLowercase: true,
-});
-```

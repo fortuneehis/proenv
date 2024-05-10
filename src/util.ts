@@ -3,7 +3,8 @@ import { resolve } from "path";
 
 const ENV_REGEXP = /^.env.*/;
 
-export const getEnvData = (path: string | string[]) => {
+export const getEnvData = (path: string | string[], noEnv?: boolean) => {
+  if (noEnv) return "";
   const tempPath = Array.isArray(path) ? [...new Set<string>(path)] : [path];
 
   if (tempPath.length === 0) throw new Error();
